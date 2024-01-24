@@ -70,6 +70,13 @@ def post_personajes():
         return jsonify({"msg": "personaje creado"})
     return jsonify({"msg": "personaje NO creado"})
 
+@app.route('/personajes/<int:personaje_id>', methods=['GET'])
+def get_personajes_id(personaje_id):
+  personaje = Personajes.query.filter_by(id=personaje_id).first()
+  if personaje is None: 
+      return jsonify({"msg": "No existe el personaje"}), 404
+  return jsonify(personaje.serialize()),200
+
 @app.route('/planetas', methods=['GET'])
 def get_planetas():
     todoslosplanetas = Planetas.query.all()
@@ -81,7 +88,7 @@ def get_planetas():
 @app.route('/planetas', methods=['POST'])
 def post_planetas():
     body = json.loads(request.data)
-    new_personaje = Planetas.query.filter_by(name=body["name"]).first() 
+    new_planeta = Planetas.query.filter_by(name=body["name"]).first() 
     if new_planeta is None: 
         new_planeta = Planetas(
             name = body["name"],
@@ -95,6 +102,13 @@ def post_planetas():
         return jsonify({"msg": "planeta creado"})
     return jsonify({"msg": "planeta NO creado"})
 
+@app.route('/planetas/<int:planet_id>', methods=['GET'])
+def get_planetas_id(planet_id):
+  planeta = Planetas.query.filter_by(id=planet_id).first()
+  if planeta is None: 
+      return jsonify({"msg": "No existe el planeta"}), 404
+  return jsonify(planeta.serialize()),200
+
 @app.route('/usuarios', methods=['GET'])
 def get_usuarios():
     todoslosusuarios = Usuarios.query.all()
@@ -103,10 +117,18 @@ def get_usuarios():
     resultado = list(map(lambda usuario:usuario.serialize(),todoslosusuarios))
     return jsonify(resultado),200
 
+@app.route('/usuarios/<int:user_id>', methods=['GET'])
+def get_usuarios_id(user_id):
+  usuario = Usuarios.query.filter_by(id=user_id).first()
+  if usuario is None: 
+      return jsonify({"msg": "No existe el usuario"}), 404
+  return jsonify(usuario.serialize()),200
+
+
 @app.route('/usuarios', methods=['POST'])
 def post_usuarios():
     body = json.loads(request.data)
-    new_usuarios = Usuarios.query.filter_by(name=body["name"]).first() 
+    new_usuario = Usuarios.query.filter_by(name=body["name"]).first() 
     if new_usuario is None: 
         new_usuario = Usuarios(
             name = body["name"],
@@ -127,6 +149,35 @@ def get_favoritos():
         return jsonify({"msg":"No se encuentran favoritos"})
     resultado = list(map(lambda favorito:favorito.serialize(),todoslosfavoritos))
     return jsonify(resultado),200
+
+@app.route('/favoritos', methods=['POST'])
+def post_favoritos():
+    body = json.loads(request.data)
+    new_favorito = Favoritos(
+            usuarios_id = body["usuarios_id"],
+            personajes_id = body["personajes_id"],
+            planetas_id = body["planetas_id"],
+
+        
+        )
+    db.session.add(new_favorito)
+    db.session.commit()
+    return jsonify({"msg": "favorito creado"})
+
+@app.route('/favoritos/<int:favorito_id>', methods=['GET','DELETE'])
+def get_favoritos_id(favorito_id):
+ 
+    favorito = Favoritos.query.filter_by(id=favorito_id).first()
+    if favorito is None: 
+        return jsonify({"msg": "No existe el favorito"}), 404
+    if request.method == "GET":
+        return jsonify(favorito.serialize()),200
+    if request.method == "DELETE":
+        db.session.delete(favorito)
+        db.session.commit()
+  
+        return jsonify({"msg": "Favorito borrado"}),200
+        
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
